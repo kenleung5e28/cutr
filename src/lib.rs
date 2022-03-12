@@ -1,6 +1,11 @@
 use crate::Extract::*;
 use clap::{App, Arg};
-use std::{error::Error, ops::Range};
+use std::{
+    error::Error,
+    fs::File,
+    io::{self, BufRead, BufReader},
+    ops::Range,
+};
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
 type PositionList = Vec<Range<usize>>;
@@ -87,8 +92,20 @@ pub fn get_args() -> MyResult<Config> {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    println!("{:#?}", config);
+    for filename in config.files {
+        match open(&filename) {
+            Err(e) => eprintln!("{}: {}", filename, e),
+            Ok(_) => println!("Opened {}", filename),
+        }
+    }
     Ok(())
+}
+
+fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
+    match filename {
+        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        _ => Ok(Box::new(BufReader::new(File::open(filename)?)))
+    }
 }
 
 fn parse_pos(range: &str) -> MyResult<PositionList> {
