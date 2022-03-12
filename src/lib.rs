@@ -92,6 +92,9 @@ pub fn run(config: Config) -> MyResult<()> {
 }
 
 fn parse_pos(range: &str) -> MyResult<PositionList> {
+    let value_error = |v: &str| -> Box<dyn Error> {
+        From::from(format!("illegal list value: \"{}\"", v))
+    };
     if range.is_empty() {
         return Err(From::from("position lists cannot be empty"));
     }
@@ -99,33 +102,31 @@ fn parse_pos(range: &str) -> MyResult<PositionList> {
     let mut list: PositionList = vec![];
     for part in parts {
         if part.is_empty() {
-            return Err(From::from(format!("illegal list value: \"{}\"", range)));
+            return Err(value_error(range));
         }
         let intervals = part.split("-").collect::<Vec<_>>();
         if intervals.len() > 2 {
-            return Err(From::from(format!("illegal list value: \"{}\"", range)));
+            return Err(value_error(range));
         }
         let mut bounds: Vec<usize> = vec![];
         for endpoint in intervals {
             if endpoint.starts_with("+") {
-                return Err(From::from(format!("illegal list value: \"{}\"", part)));
+                return Err(value_error(part));
             }
             let bound = endpoint.parse::<usize>()
-                .map_err(|_| -> Box<dyn Error> {
-                    From::from(format!("illegal list value: \"{}\"", part))
-                })?;
+                .map_err(|_| value_error(part))?;
             bounds.push(bound);
         }
         let lower = bounds[0];
         if lower == 0 {
-            return Err(From::from("illegal list value: \"0\""));
+            return Err(value_error("0"));
         }
         if bounds.len() == 1 {
             list.push(lower - 1..lower);
         } else {
             let upper = bounds[1];
             if upper == 0 {
-                return Err(From::from("illegal list value: \"0\""));
+                return Err(value_error("0"));
             }
             if lower >= upper {
                 return Err(From::from(format!("First number in range ({}) must be lower than second number ({})", lower, upper)));
