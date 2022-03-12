@@ -69,7 +69,7 @@ pub fn get_args() -> MyResult<Config> {
             .required_unless_one(&["bytes", "chars"])
         )
         .get_matches();
-    let delimiter = matches.value_of("delim").unwrap();
+    let delimiter = matches.value_of("delimiter").unwrap();
     if delimiter.len() != 1 {
         return Err(From::from(format!("--delim \"{}\" must be a single byte", delimiter)));
     }
