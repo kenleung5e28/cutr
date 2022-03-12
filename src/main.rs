@@ -1,5 +1,5 @@
 fn main() {
-    if Err(e) = cutr::get_args().and_then(cutr::run) {
+    if let Err(e) = cutr::get_args().and_then(cutr::run) {
         eprintln!("{}", e);
         std::process::exit(1);
     }
