@@ -47,7 +47,6 @@ pub fn get_args() -> MyResult<Config> {
             .help("Selected bytes")
             .takes_value(true)
             .conflicts_with_all(&["chars", "fields"])
-            .required_unless_one(&["chars", "fields"])
         )
         .arg(
             Arg::with_name("chars")
@@ -57,7 +56,6 @@ pub fn get_args() -> MyResult<Config> {
             .help("Selected characters")
             .takes_value(true)
             .conflicts_with("fields")
-            .required_unless_one(&["bytes", "fields"])
         )
         .arg(
             Arg::with_name("fields")
@@ -66,7 +64,6 @@ pub fn get_args() -> MyResult<Config> {
             .long("fields")
             .help("Selected fields")
             .takes_value(true)
-            .required_unless_one(&["bytes", "chars"])
         )
         .get_matches();
     let delimiter = matches.value_of("delimiter").unwrap();
@@ -77,8 +74,10 @@ pub fn get_args() -> MyResult<Config> {
         Bytes(parse_pos(matches.value_of("bytes").unwrap())?)
     } else if matches.is_present("chars") {
         Chars(parse_pos(matches.value_of("chars").unwrap())?)
-    } else {
+    } else if matches.is_present("fields") {
         Fields(parse_pos(matches.value_of("fields").unwrap())?)
+    } else {
+        return Err(From::from("Must have --fields, --bytes, or --chars"));
     };
     Ok(Config {
         files: matches.values_of_lossy("files").unwrap(),
