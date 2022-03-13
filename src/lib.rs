@@ -155,11 +155,35 @@ fn parse_pos(range: &str) -> MyResult<PositionList> {
 }
 
 fn extract_chars(line: &str, char_pos: &[Range<usize>]) -> String {
-    unimplemented!();
+    let chars = line.chars().collect::<Vec<_>>();
+    char_pos.into_iter()
+        .map(|r| {
+            if r.start >= chars.len() {
+                return "".to_string();
+            }
+            let r = r.start..usize::min(r.end, chars.len());
+            let mut s = vec![' '; r.len()];
+            s.clone_from_slice(&chars[r.to_owned()]);
+            s.into_iter().collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("")
 }
 
 fn extract_bytes(line: &str, byte_pos: &[Range<usize>]) -> String {
-    unimplemented!();
+    let bytes = line.bytes().collect::<Vec<_>>();
+    byte_pos.into_iter()
+        .map(|r| {
+            if r.start >= bytes.len() {
+                return "".to_string();
+            }
+            let r = r.start..usize::min(r.end, bytes.len());
+            let mut s = vec![0; r.len()];
+            s.clone_from_slice(&bytes[r.to_owned()]);
+            String::from_utf8_lossy(&s).to_string()
+        })
+        .collect::<Vec<_>>()
+        .join("")
 }
 
 #[cfg(test)]
