@@ -121,23 +121,23 @@ fn parse_pos(range: &str) -> MyResult<PositionList> {
         if part.is_empty() {
             return Err(value_error(range));
         }
-        let intervals = part.split("-").collect::<Vec<_>>();
-        if intervals.len() > 2 {
+        let interval = part.split("-").collect::<Vec<_>>();
+        if interval.len() > 2 {
             return Err(value_error(range));
         }
-        let mut bounds: Vec<usize> = vec![];
-        for endpoint in intervals {
-            if endpoint.starts_with("+") {
-                return Err(value_error(part));
-            }
-            let bound = endpoint.parse::<usize>()
-                .map_err(|_| value_error(part))?;
-            bounds.push(bound);
-        }
+        let bounds = interval.into_iter()
+            .map(|endpoint| if endpoint.starts_with("+") {
+                Err(value_error(part))
+            } else {
+                let bound = endpoint.parse::<usize>().map_err(|_| value_error(part))?;
+                if bound == 0 {
+                    Err(value_error("0"))
+                } else {
+                    Ok(bound)
+                }
+            })
+            .collect::<Result<Vec<_>, _>>()?;
         let lower = bounds[0];
-        if lower == 0 {
-            return Err(value_error("0"));
-        }
         if bounds.len() == 1 {
             list.push(lower - 1..lower);
         } else {
