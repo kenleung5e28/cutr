@@ -1,11 +1,12 @@
 use crate::Extract::*;
 use clap::{App, Arg};
-use csv::StringRecord;
+use csv::{ReaderBuilder, StringRecord};
 use std::{
     error::Error,
     fs::File,
     io::{self, BufRead, BufReader},
     ops::Range,
+    str,
 };
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
@@ -96,7 +97,31 @@ pub fn run(config: Config) -> MyResult<()> {
     for filename in config.files {
         match open(&filename) {
             Err(e) => eprintln!("{}: {}", filename, e),
-            Ok(_) => println!("Opened {}", filename),
+            Ok(file) => {
+                match &config.extract {
+                    Fields(field_pos) => {
+                        let mut reader = ReaderBuilder::new()
+                            .delimiter(config.delimiter)
+                            .from_reader(file);
+                        for record in reader.records() {
+                            let fields = extract_fields(&record?, field_pos);
+                            println!("{}", fields.join(str::from_utf8(&[config.delimiter])?));
+                        }
+                    }
+                    Bytes(byte_pos) => {
+                        for line in file.lines() {
+                            let bytes = extract_bytes(&line?, byte_pos);
+                            println!("{}", bytes);
+                        }
+                    }
+                    Chars(char_pos) => {
+                        for line in file.lines() {
+                            let chars = extract_chars(&line?, char_pos);
+                            println!("{}", chars);
+                        }
+                    }
+                }
+            }
         }
     }
     Ok(())
