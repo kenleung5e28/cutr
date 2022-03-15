@@ -101,6 +101,7 @@ pub fn run(config: Config) -> MyResult<()> {
                 match &config.extract {
                     Fields(field_pos) => {
                         let mut reader = ReaderBuilder::new()
+                            .has_headers(false)
                             .delimiter(config.delimiter)
                             .from_reader(file);
                         for record in reader.records() {
