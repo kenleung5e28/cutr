@@ -190,7 +190,7 @@ fn extract_chars(line: &str, char_pos: &[Range<usize>]) -> String {
             }
             let r = r.start..usize::min(r.end, chars.len());
             let mut s = vec![' '; r.len()];
-            s.clone_from_slice(&chars[r.to_owned()]);
+            s.clone_from_slice(&chars[r]);
             s.into_iter().collect::<String>()
         })
         .collect::<Vec<_>>()
@@ -206,7 +206,7 @@ fn extract_bytes(line: &str, byte_pos: &[Range<usize>]) -> String {
             }
             let r = r.start..usize::min(r.end, bytes.len());
             let mut s = vec![0; r.len()];
-            s.clone_from_slice(&bytes[r.to_owned()]);
+            s.clone_from_slice(&bytes[r]);
             String::from_utf8_lossy(&s).to_string()
         })
         .collect::<Vec<_>>()
@@ -214,9 +214,9 @@ fn extract_bytes(line: &str, byte_pos: &[Range<usize>]) -> String {
 }
 
 fn extract_fields(record: &StringRecord, field_pos: &[Range<usize>]) -> Vec<String> {
-    field_pos.into_iter()
+    field_pos.iter().cloned()
         .flat_map(|r| {
-            r.to_owned().map(|i| record.get(i))
+            r.map(|i| record.get(i))
         })
         .filter_map(|x| x)
         .map(|x| x.to_string())
