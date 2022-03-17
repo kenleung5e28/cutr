@@ -208,7 +208,7 @@ fn extract_fields(record: &StringRecord, field_pos: &[Range<usize>]) -> Vec<Stri
         .flat_map(|r| {
             r.filter_map(|i| record.get(i))
         })
-        .map(|x| x.to_string())
+        .map(String::from)
         .collect()
 }
 
