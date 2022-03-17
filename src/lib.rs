@@ -183,42 +183,31 @@ fn parse_pos(range: &str) -> MyResult<PositionList> {
 
 fn extract_chars(line: &str, char_pos: &[Range<usize>]) -> String {
     let chars = line.chars().collect::<Vec<_>>();
-    char_pos.into_iter()
-        .map(|r| {
-            if r.start >= chars.len() {
-                return "".to_string();
-            }
-            let r = r.start..usize::min(r.end, chars.len());
-            let mut s = vec![' '; r.len()];
-            s.clone_from_slice(&chars[r]);
-            s.into_iter().collect::<String>()
+    char_pos.iter()
+        .cloned()
+        .flat_map(|r| {
+            r.filter_map(|i| chars.get(i))
         })
-        .collect::<Vec<_>>()
-        .join("")
+        .collect()
 }
 
 fn extract_bytes(line: &str, byte_pos: &[Range<usize>]) -> String {
-    let bytes = line.bytes().collect::<Vec<_>>();
-    byte_pos.into_iter()
-        .map(|r| {
-            if r.start >= bytes.len() {
-                return "".to_string();
-            }
-            let r = r.start..usize::min(r.end, bytes.len());
-            let mut s = vec![0; r.len()];
-            s.clone_from_slice(&bytes[r]);
-            String::from_utf8_lossy(&s).to_string()
+    let bytes = line.as_bytes();
+    let extracted = byte_pos.iter()
+        .cloned()
+        .flat_map(|r| {
+            r.filter_map(|i| bytes.get(i)).copied()
         })
-        .collect::<Vec<_>>()
-        .join("")
+        .collect::<Vec<_>>();
+    String::from_utf8_lossy(&extracted).into_owned()
 }
 
 fn extract_fields(record: &StringRecord, field_pos: &[Range<usize>]) -> Vec<String> {
-    field_pos.iter().cloned()
+    field_pos.iter()
+        .cloned()
         .flat_map(|r| {
-            r.map(|i| record.get(i))
+            r.filter_map(|i| record.get(i))
         })
-        .filter_map(|x| x)
         .map(|x| x.to_string())
         .collect()
 }
